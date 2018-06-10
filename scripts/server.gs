@@ -12,7 +12,7 @@ function uploadFile(data, fileName, id) {
         ss = Utilities.newBlob(bytes, contentType, fileName);
       
         //create folder
-        var dropbox = "TOKYO TRIP PHOTOS";
+        var dropbox = "<filename here>";
         var folder, folders = DriveApp.getFoldersByName(dropbox);
       
         if (folders.hasNext()) {
