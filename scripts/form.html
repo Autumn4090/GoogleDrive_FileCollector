@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+<style type="text/css">
+body {
+	background-color: #FFFFFF;
+}
+</style>
+<BR>
+<BR>
+<BR>
+<div align="center">
+  <i style="
+    font-size: 35px;
+    font-weight: bolder;
+    color: white;
+    background-color: red;
+    font-family: sans-serif;
+    ">Give Me Your Pictures</i>
+  <table width="459" border="0">
+    <tbody>
+      <tr>
+        <td width="462"><div align="center">
+          <hr>
+        </div>
+          <form id="myForm" align="center">
+            <input type="file" name="myFile" id="myFile" multiple>
+            <input type="submit" value="SUBMIT" 
+           onclick="try{
+                    UploadFile();
+                    return false;
+                    }
+                    catch(e){console.log(e.toString());}">
+          </form>
+          <div id="output"></div>
+          <div id="report">
+              <ol id="pictures_list">
+                  
+              </ol>
+          <div>
+           <hr>
+        <p id="preview_text" style="text-align:center" hidden> Click the filename above to preview the picture</p>
+        <div style="text-align: center">
+          <img id="preview" hieght=300px width=400px> 
+        </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>&nbsp;</h3>
+  <p>&nbsp;</p>
+</div>
+</body>
+
+<script>
+          // Total valid files counts and current uploading files counts
+          var total, current=0;
+          var files;
+          var ol = document.querySelector("#pictures_list");
+          
+          ol.addEventListener("click", preview, false);
+          
+          // I used to collect photos, therefore it is a preview photos function
+          function preview(e){
+              if (e.target != e.currentTarget) {
+                  location.href = "#preview";
+                  var item = e.target.id;
+                  var pic = document.querySelector("#"+item);
+                  var preview_img = document.querySelector("#preview");
+
+                  for(var j=0; j<files.length; j++){
+                      // To find the chosen file in file list
+                      if(files[j].name + "OK" == pic.innerText || files[j].name == pic.innerText){
+                          var reader = new FileReader();
+                          reader.onload = function(e){
+                              preview_img.src = reader.result; 
+                          }
+                          // Show imgage
+                          reader.readAsDataURL(files[j]);
+                          break;
+                      }
+                  }
+               }
+          }
+          
+          function UploadFile(){
+              files = document.querySelector("#myFile").files;
+              var li = document.querySelector("#pictures_list");
+              li.innerHTML = "";
+              document.querySelector('#output').innerHTML = "Uploading... Be patient...";
+              document.querySelector("input[type=submit]").disabled = true;
+              document.querySelector("#preview").src = "";
+              total = files.length;
+              current=0;
+              document.querySelector("#preview_text").hidden = false;
+
+              //Upload files asynchronously?(i guess it can)
+              for (i=0; i<files.length; i++){
+                  console.log(files[i]);
+                  var file_type = files[i].type.split('/')[0];
+                  if(file_type != 'image'){
+                      // To limit the alert only show once
+                      if(total == files.length){
+                          alert("non-image file will be filtered");
+                      }
+                      total-=1;
+                      // If all files is filtered
+                      if(total==0){
+                          document.querySelector("#preview_text").hidden = true;
+                          document.querySelector('#output').innerHTML = "No picture is uploaded!";
+                          
+                      }
+                      continue;
+                  }
+                  if(i%2 == 0){
+                      li.innerHTML += "<li class='pic' style='text-align:left;background-color: lightgrey;' id=pic_" + i + ">" + files[i].name + "</li>"
+                  }else{
+                      li.innerHTML += "<li class='pic' style='text-align:left;background-color: white;' id=pic_" + i + ">" + files[i].name + "</li>"
+                  }
+
+                  uploadNow(files[i], i);
+              }
+          }
+          function uploadNow(file, i){
+              var reader = new FileReader();
+              reader.filename = file.name;
+              reader.count_id = i;
+              reader.onload = function(e) {
+                  var content = reader.result;
+                  google.script.run.withSuccessHandler(fileUploaded)
+                                  .uploadFile(content, this.filename, this.count_id);
+              }
+              reader.onerror = function(e){
+                  console.log(e);
+               }
+              // Load file and upload
+              reader.readAsDataURL(file);
+          }
+          
+          function fileUploaded(status) {
+              document.getElementById('pic_'+ status.id).innerHTML  += "<span style='float:right;color:green'>OK</span>";
+              current+=1;
+              if (current == total){
+                  document.getElementById('output').innerHTML = "<a target='_blank' href=" + status.url + ">Done! Click here to see what others uploaded</a>";
+                  document.querySelector("input[type=submit]").disabled = false;
+              }else{
+                  document.getElementById('output').innerHTML = "<p> uploading <span style='color:red'>" + total + "</span> pictures, <span style='color:green'>" + (total - current) + "</span> pictures left<\p>";
+              }
+          }
+          </script>
+        <style>
+            input { display:block; margin: 20px; }
+        </style>
+</html>
+
+
+
